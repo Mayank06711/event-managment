@@ -28,19 +28,20 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // importing routes Routes
-import userRoutes from "./routes/userRoutes.js"
-import serviceRoutes from "./routes/serviceRoutes.js"
-import bookingRoutes from "./routes/bookingRoutes.js"
+import userRoutes from "./routes/userRoutes.js";
+import serviceRoutes from "./routes/serviceRoutes.js";
+import bookingRoutes from "./routes/bookingRoutes.js";
+import errorMiddleware from "./middlewares/errorHandlerMiddleware.js";
 app.get("/", (req, res) => {
   res.send("Hello, World!");
 });
 
-// handle undefined routes
-
-app.use((req, res, next) => {
-  const error = new Error("Not Found");
-  error.status = 404;
-  next(error);
+app.use("user/api/v1", userRoutes);
+app.use("user/api/v1", serviceRoutes);
+app.use("booking/api/v1", bookingRoutes);
+// handle error and undefined_routes:
+app.use(errorMiddleware);
+app.use("*", (req, res) => {
+  res.status(404).json({ message: "Page not found" });
 });
-
 export { app };
