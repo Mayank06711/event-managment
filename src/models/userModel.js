@@ -8,6 +8,7 @@ const UserSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, enum: ["user", "admin"], default: "user" },
+    refreshToken: { type: String, required: true}
   },
   { timestamps: true }
 );
@@ -15,20 +16,43 @@ const UserSchema = new mongoose.Schema(
 // Hash the password before saving
 UserSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
-  this.password = await bcrypt.hash(this.password, 12);
+  this.password = await bcrypt.hashSync(this.password, 10);
   next();
 });
 
 // Check password method
-UserSchema.methods.isPasswordCorrect = async function (userPassword) {
-  return await bcrypt.compare(this.password, userPassword);
+UserSchema.methods.isPasswordCorrect = async function (password) {
+  // Compare the provided password with the hashed password stored in the current user document
+  return await bcrypt.compare(this.password, password);
 };
 
-// Generate JWT token
-UserSchema.methods.generateAuthToken = function () {
-  return jwt.sign({ id: this._id, role: this.role }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN,
-  });
+userSchema.methods.generateAccessToken = function () {
+  // Generate a JSON Web Token (JWT) containing user information
+  // Sign the token with the ACCESS_TOKEN_SECRET environment variable
+  // Set the expiration time for the token based on the ACCESS_TOKEN_EXPIRY environment variable
+
+  return jwt.sign(
+    {
+      _id: this._id,
+      email: this.email,
+    },
+    process.env.ACCESS_TOKEN_SECRET,
+    {
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
+    }
+  );
+};
+
+userSchema.methods.generateRefreshToken = function () {
+  return jwt.sign(
+    {
+      _id: this._id,
+    },
+    process.env.REFRESH_TOKEN_SECRET,
+    {
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
+    }
+  );
 };
 
 const User = mongoose.model("User", UserSchema);

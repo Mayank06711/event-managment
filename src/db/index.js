@@ -1,14 +1,24 @@
 import mongoose from "mongoose";
 
-// Connect to MongoDB
-const connectDb = async () => {
+import { DB_NAME } from "../contants.js";
+
+const connectDB = async () => {
   try {
-    const connectionInst = await mongoose.connect(process.env.MONGODB_URI);
-    console.log(`MongoDB connected... with ${connectionInst}`);
+    // console.log(process.env.MONGODB_URL)
+    const connectionInstance = await mongoose.connect(
+      `${process.env.MONGODB_URL}/${DB_NAME}`
+    );
+    console.log(
+      ` SEE me in src db index.js IF you Forgot
+         /n DATABASE CONNECTION ESTABLISHED With DB Host !! ${connectionInstance.connection.host}`
+    );
   } catch (error) {
-    console.error(`Error connecting to MongoDB: ${error.message}`);
+    console.log(
+      ` MONGODB CONNECTION FAILED: with data base: ${DB_NAME}  FROM db.index.js`,
+      error
+    );
     process.exit(1);
   }
 };
 
-export default connectDb;
+export default connectDB; 
